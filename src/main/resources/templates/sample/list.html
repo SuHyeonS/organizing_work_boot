@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+시작 페이지
+<form method="post" action="/sample/new" th:object="${sampleTable}" >
+    <h3>sample 리스트</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>NAME</th>
+            <th>ID</th>
+            <th>PW</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${sampleTable}">
+            <td th:text="${item.sampleName }"></td>
+            <td th:text="${item?.sampleId }"></td>
+            <td th:text="${item?.samplePw }"></td>
+            <td>
+                <a href="#" th:href="@{/sample (SamplePk=${item.SamplePk})}" role="button">수정</a></td>
+            <td>
+                <a href="#" th:href="@{/sample/delete (SamplePk=${item.SamplePk})}" role="button">삭제</a></td>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <a href="/sample">돌아가기</a>
+</form>
+
+</body>
+</html>
