@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="sample/fragments/header ::header" /><!--헤더추가-->
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:replace="sample/fragments/bodyHeader :: bodyHeader" /><!--바디추가 검색및, 메뉴용-->
+sample 시작 페이지
+<form method="post" action="/sample/new" th:object="${sampleVo}" >
+    <h3>입력</h3>
+    <input type="hidden" th:field="*{samplePk}">
+    <ul>
+        <li>
+            <p>ID: </p>
+            <!--
+            th:field="*{sampleId}" 타임리프로 name 과 value를 합친 느낌입니다
+            값이있다면 표현하고 submit시 field이름으로 서버에 올러갑니다
+            -->
+            <input type="text" th:field="*{sampleId}" placeholder="입력해주세요.">
+        </li>
+            <li>
+                <p>NAME: </p>
+                <input type="text" th:field="*{sampleName}" placeholder="입력해주세요.">
+            </li>
+        <li>
+            <p>PW: </p>
+            <input type="text" th:field="*{samplePw}" placeholder="입력해주세요.">
+        </li>
+        <li>
+            <input type="submit" value="저장">
+        </li>
+        <li>
+            <a href="/sample/list">회원리스트</a>
+        </li>
+    </ul>
+    <div th:replace="sample/fragments/footer :: footer" /><!--푸터추가-->
+</form>
+
+</body>
+</html>
