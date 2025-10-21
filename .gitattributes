@@ -1,2 +1,5 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+
+# .properties 파일 한글 깨짐 방지 (UTF-8)
+*.properties text working-tree-encoding=UTF-8
