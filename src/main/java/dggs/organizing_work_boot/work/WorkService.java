@@ -9,8 +9,15 @@ import java.util.Optional;
 public interface WorkService {
     //디폴트 public
     Long join(Work sample); //등록 및 수정
+    Long update(Work sample); //등록 및 수정
     List<Work> findTableList(); //목록
     Optional<Work> findOne(Long pk); //상세
     void deleteById(Work sampleTable); //삭제
 
+
+    void updateWorks(List<Work> updatedList); //저장
+    void insertWorks(List<Work> newList); //저장
+
+    List<Work> findByParent_WorkPk(Long parentId);
+    List<Work> findByParentIsNull();
 }

@@ -18,4 +18,8 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
 
     @Query("SELECT w FROM Work w LEFT JOIN FETCH w.children WHERE w.id = :id")
     Optional<Work> findWorkTreeById(@Param("id") Long id);
+
+    List<Work> findByParent_WorkPk(Long parentId);
+    List<Work> findByParentIsNull();
+
 }

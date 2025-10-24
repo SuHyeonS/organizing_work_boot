@@ -27,6 +27,9 @@ public class Work {
     @Column(name = "work_requester")
     private String workRequester; // 요청자
 
+    @Column(name = "work_rerformer")
+    private String workPerformer; // 수행자
+
     @Column(name = "work_request_date")
     private LocalDate workRequestDate; // 요청일
 
@@ -71,4 +74,11 @@ public class Work {
         children.add(child);
         child.setParent(this);
     }
+
+    //데이터 받기용 (비 컬럼)
+    @Transient
+    private List<Work> updatedList;
+    @Transient
+    private List<Work> newList;
+
 }
