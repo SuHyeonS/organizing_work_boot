@@ -7,8 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 @Slf4j
@@ -45,7 +44,6 @@ public class WorkServicelmpl implements WorkService {
         log.info(className+"findByParentIsNull.. ");
         return workRepository.findByParentIsNull();
     }
-
 
     //자식목록
     @Override
@@ -133,5 +131,57 @@ public class WorkServicelmpl implements WorkService {
     }
 
 
+    // util 함수
+    private String toCamelCase(String s) {
+        String[] parts = s.split("_");
+        StringBuilder camelCaseString = new StringBuilder(parts[0]);
+        for (int i = 1; i < parts.length; i++) {
+            camelCaseString.append(parts[i].substring(0, 1).toUpperCase());
+            camelCaseString.append(parts[i].substring(1));
+        }
+        return camelCaseString.toString();
+    }
+
+    //DB DDL 정보
+    @Override
+    public List<Map<String, Object>> findTableInfo(String tableName, String schemaName) {
+        log.info("BusinessServicelmpl findTableInfo..tableName : "+tableName+", schemaName : "+schemaName);
+
+
+        // VO 값 / 기본값 처리
+        Work work = new Work();
+        if(tableName == null || tableName.isEmpty()) {
+            tableName = work.getTableName();
+        }
+        if(schemaName == null || schemaName.isEmpty()) {
+            schemaName = work.getSchemaName();
+        }
+
+        List<Object[]> rows = workRepository.findTableInfo(tableName, schemaName);
+
+        List<Map<String, Object>> fields = new ArrayList<>();
+
+        for (Object row[] : rows) {
+            String columnName = (String) row[2];   // column_name
+            String dataType   = (String) row[3];   // data_type
+            String comment    = (String) row[4];   // column_comment
+
+            String type = "text";
+            if (dataType.contains("date") || columnName.toLowerCase().contains("date")) {
+                type = "date";
+            } else if (columnName.toLowerCase().contains("status") || columnName.toLowerCase().contains("situation")) {
+                type = "sel";
+            }
+
+            Map<String, Object> field = new HashMap<>();
+            field.put("key", toCamelCase(columnName)); // ← 여기서 DB 컬럼명을 camelCase로 변환
+            field.put("label", comment != null ? comment : columnName);
+            field.put("type", type);
+
+            fields.add(field);
+        }
+
+        return fields;
+    }
 
 }

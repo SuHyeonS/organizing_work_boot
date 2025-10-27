@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -21,5 +22,22 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
 
     List<Work> findByParent_WorkPk(Long parentId);
     List<Work> findByParentIsNull();
+
+    @Query(value = """
+        SELECT
+            c.table_schema,
+            c.table_name,
+            c.column_name,
+            c.data_type,
+            col_description(pg_class.oid, c.ordinal_position) AS column_comment
+        FROM information_schema.columns c
+        JOIN pg_class ON pg_class.relname = c.table_name
+        WHERE c.table_name = :tableName
+          AND c.table_schema = :schemaName
+        ORDER BY c.ordinal_position
+        """, nativeQuery = true)
+    List<Object[]> findTableInfo(
+            @Param("tableName") String tableName,
+            @Param("schemaName") String schemaName);
 
 }

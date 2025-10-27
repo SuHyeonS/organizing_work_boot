@@ -4,6 +4,7 @@ import dggs.organizing_work_boot.work.entity.Work;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface WorkService {
@@ -20,4 +21,5 @@ public interface WorkService {
 
     List<Work> findByParent_WorkPk(Long parentId);
     List<Work> findByParentIsNull();
+    List<Map<String, Object>> findTableInfo(String tableName, String schemaName);
 }

@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /*
@@ -38,13 +39,20 @@ public class AipWorkController {
     @Autowired
     private final WorkService workService; // Lombok이 생성자 자동 생성
 
+    //데이터 DDL
+    @GetMapping("/{tableName}")
+    public List<Map<String, Object>> dbInfo (@ModelAttribute Work work){
+        log.info(className+" dbInfo..");
+        List<Map<String, Object>> findTableInfo = workService.findTableInfo(work.getTableName(),work.getSchemaName());
+        return findTableInfo;
+    }
+
     //select
     @GetMapping("/list")
-    public List<Work> list (){
+    public List<Work> list (@ModelAttribute Work work){
         log.info(className+" list..");
         //List<Work> list = workService.findTableList(); //전체
         List<Work> list = workService.findByParentIsNull(); //부모만
-        
         return list;
     }
 
@@ -52,7 +60,7 @@ public class AipWorkController {
     @GetMapping("/subList")
     public List<Work> subList (Model model, @ModelAttribute Work key){
         log.info(className+" subList..key : "+key.getWorkPk());
-        List<Work> list = workService.findByParent_WorkPk(key.getWorkPk());
+        List<Work> list = workService.findByParent_WorkPk(key.getWorkPk()); //자식만
         return list;
     }
 
