@@ -22,4 +22,6 @@ public interface WorkService {
     List<Work> findByParent_WorkPk(Long parentId);
     List<Work> findByParentIsNull();
     List<Map<String, Object>> findTableInfo(String tableName, String schemaName);
+
+    Optional<Work> findByIdWithParent(Long pk);
 }

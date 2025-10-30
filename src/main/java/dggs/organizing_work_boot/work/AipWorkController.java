@@ -40,47 +40,94 @@ public class AipWorkController {
     private final WorkService workService; // Lombok이 생성자 자동 생성
 
     //데이터 DDL
-    @GetMapping("/{tableName}")
-    public List<Map<String, Object>> dbInfo (@ModelAttribute Work work){
-        log.info(className+" dbInfo..");
-        List<Map<String, Object>> findTableInfo = workService.findTableInfo(work.getTableName(),work.getSchemaName());
+    @GetMapping("/meta")
+    //@GetMapping("/{tableName}")
+    public List<Map<String, Object>> getTableInfo (@RequestParam String schemaName, @RequestParam String tableName){
+        log.info(className+" getTableInfo..schemaName={}, tableName={}",schemaName,tableName);
+
+        List<Map<String, Object>> findTableInfo;
+        findTableInfo = workService.findTableInfo(tableName,schemaName);
         return findTableInfo;
     }
 
-    //select
-    @GetMapping("/list")
-    public List<Work> list (@ModelAttribute Work work){
-        log.info(className+" list..");
+    //부모목록
+    @GetMapping // 호출 axios.get("/api/work");
+    //@GetMapping("/List")
+    public List<Work> getParentDetail (@ModelAttribute Work work){
+        log.info(className+" getParentDetail..");
         //List<Work> list = workService.findTableList(); //전체
         List<Work> list = workService.findByParentIsNull(); //부모만
         return list;
     }
 
-    //select
-    @GetMapping("/subList")
-    public List<Work> subList (Model model, @ModelAttribute Work key){
-        log.info(className+" subList..key : "+key.getWorkPk());
-        List<Work> list = workService.findByParent_WorkPk(key.getWorkPk()); //자식만
+    //자식목록
+    @GetMapping("/{id}/children")
+    //@GetMapping("/subList")
+    public List<Work> getSubList (@PathVariable Long id){//(Model model, @ModelAttribute Work key){
+        log.info(className+" getSubList..parentId = {}", id);
+        List<Work> list = workService.findByParent_WorkPk(id);
         return list;
     }
 
-    @GetMapping(value="/one")
-    public Optional<Work> one (Model model, @ModelAttribute Work business){
-        log.info(className+" one.. getBusinessPk : "+business.getWorkPk());
+    //단건 조회 @PathVariable — “URL 경로에서 값을 받는 경우”
+    @GetMapping("/{id}")
+    //@GetMapping(value="/one")
+    public ResponseEntity<Work> getOne (@PathVariable Long id) {
+        log.info("{} getOne.. id={}", className, id);
 
-        Optional<Work> resultValue = Optional.empty();
+        Work work = workService.findOne(id)
+                .orElseThrow(() -> new RuntimeException("해당 Work를 찾을 수 없습니다."));
 
-        if(business.getWorkPk() != null && !"".equals(business.getWorkPk())) {
-            log.info(className+" insert or update {}", business.getWorkPk());
-            resultValue = workService.findOne(business.getWorkPk());
-        }else{
-            log.info(className+" not value");
-        }
-        //log.info("test : "+business.getBusinessManagementList().get(0).getBusinessManagementPk());
-
-        return resultValue;
+        return ResponseEntity.ok(work);
     }
 
+    //단건 조회 부모키 가져오기 @PathVariable — “URL 경로에서 값을 받는 경우”
+    @GetMapping("/{id}/parentId")
+    //@GetMapping(value="/one")
+    public ResponseEntity<Work> getParentId (@PathVariable Long id) {
+        log.info("{} getParentId.. id={}", className, id);
+
+        Optional<Work> workOpt = workService.findByIdWithParent(id);
+                //.orElseThrow(() -> new RuntimeException("해당 Work를 찾을 수 없습니다."));
+
+        //key 가 없을경우
+        if (workOpt.isEmpty()) {
+            log.warn("⚠ 해당 Work({})를 찾을 수 없습니다.", id);
+            throw new RuntimeException("해당 Work를 찾을 수 없습니다.");
+        }
+
+        Work work = workOpt.get(); // Optional에서 실제 객체 꺼내기
+        log.info("{} getParentId.. work={}", className, work.getWorkPk());
+
+        // 부모 Work 가져오기
+        Work parent = work.getParent();
+
+        //부모가 없을경우
+        // ✅ null 체크를 log 전에 수행해야 함
+        if (parent == null) {
+            log.info("{} getParentId.. 부모 없음(id={})", className, id);
+            // 204 No Content
+            return ResponseEntity.noContent().build();
+        }
+
+        // Lazy 강제 초기화
+        parent.getWorkPk();   // Hibernate 프록시 초기화
+        parent.setChildren(null); // 자식 정보 제외 (순환참조 방지)
+
+        log.info("{} getParentId.. parent={}", className, parent.getWorkPk());
+        if (parent == null) {
+            // 부모가 없는 경우 204 No Content 또는 null 반환
+            return ResponseEntity.noContent().build();
+        }
+
+        // Lazy 강제 초기화
+        parent.getWorkPk();  // 부모 PK 접근 → Hibernate 초기화
+        parent.setChildren(null); // 자식은 제외하고 보내기
+
+        return ResponseEntity.ok(parent);
+    }
+
+    //등록
     @PostMapping
     public ResponseEntity<String> create(@RequestBody Work work) {
         log.info("insert.. {}", work);
@@ -88,6 +135,7 @@ public class AipWorkController {
         return ResponseEntity.ok("등록 완료: " + id);
     }
 
+    //수정
     @PutMapping("/{id}")
     public ResponseEntity<String> update(@PathVariable Long id, @RequestBody Work work) {
         log.info("update.. {}", id);
@@ -100,12 +148,15 @@ public class AipWorkController {
     //전체 저장
     @PostMapping("/saveAll")
     public ResponseEntity<?> saveAll(@RequestBody Work request) {
+        /*
         Long parentPk = request.getParent() != null ? request.getParent().getWorkPk() : null;
         if(null != parentPk){
-            log.info(className+" saveAll.. 부모키 : "+parentPk);
+            log.info(className+" saveAll.. 부모키={} : ",parentPk);
         }else{
             log.info(className+" saveAll.. 부모키 NULL ");
         }
+*/
+        log.info(className+" saveAll..");
 
         List<Work> updatedList = request.getUpdatedList();
         List<Work> newList = request.getNewList();
@@ -155,7 +206,7 @@ public class AipWorkController {
     //ResponseEntity<T>	응답 본문 + HTTP 상태코드 제어	ResponseEntity.ok("삭제되었습니다.")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
-        log.info(className + " delete.. id=" + id);
+        log.info(className + " delete.. id = {}", id);
 
         Work data = new Work();
         data.setWorkPk(id);

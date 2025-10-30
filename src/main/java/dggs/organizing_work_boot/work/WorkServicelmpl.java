@@ -45,6 +45,15 @@ public class WorkServicelmpl implements WorkService {
         return workRepository.findByParentIsNull();
     }
 
+    //부모객체
+    @Override
+    @Transactional(readOnly = true) //읽기용
+    public Optional<Work> findByIdWithParent(Long pk) {
+        log.info(className+"findByIdWithParent.. ");
+        return workRepository.findByIdWithParent(pk);
+    }
+
+
     //자식목록
     @Override
     @Transactional(readOnly = true) //읽기용
