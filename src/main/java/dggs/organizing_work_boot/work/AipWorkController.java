@@ -4,6 +4,7 @@ import dggs.organizing_work_boot.work.entity.Work;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -127,7 +128,7 @@ public class AipWorkController {
         return ResponseEntity.ok(parent);
     }
 
-    //등록
+    //단건 저장
     @PostMapping
     public ResponseEntity<String> create(@RequestBody Work work) {
         log.info("insert.. {}", work);
@@ -144,47 +145,73 @@ public class AipWorkController {
         return ResponseEntity.ok("수정 완료");
     }
 
+    //하위목록으로 이관
+    @PutMapping("/{id}/moveChildren")
+    public ResponseEntity<String> moveChildren(@PathVariable Long id, @RequestBody Work work) {
+        log.info("moveSublist.. {} and subList : {}", id, work);
+        work.setWorkPk(id);
+        workService.moveChildren(id, work.getSubList());
+        return ResponseEntity.ok("하위목록으로 이관 되었습니다");
+    }
+
+    //상위목록으로 이관
+    @PutMapping("/{id}/moveParent")
+    public ResponseEntity<String> moveParent(@PathVariable Long id, @RequestBody Work work) {
+        log.info("moveParent.. {} and moveParent : {}", id, work);
+        work.setWorkPk(id);
+
+        String mge="";
+        try {
+            mge = workService.moveParent(id, work.getSubList());
+            return ResponseEntity.ok(mge);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(mge);
+        }
+
+
+    }
+
 
     //전체 저장
     @PostMapping("/saveAll")
-    public ResponseEntity<?> saveAll(@RequestBody Work request) {
-        /*
-        Long parentPk = request.getParent() != null ? request.getParent().getWorkPk() : null;
-        if(null != parentPk){
-            log.info(className+" saveAll.. 부모키={} : ",parentPk);
-        }else{
-            log.info(className+" saveAll.. 부모키 NULL ");
-        }
-*/
-        log.info(className+" saveAll..");
+    public ResponseEntity<?> saveAll(@RequestBody Work Work) {
+        log.info("{} saveAll.. getWorkPk = {}", className, Work.getWorkPk());
 
-        List<Work> updatedList = request.getUpdatedList();
-        List<Work> newList = request.getNewList();
-        /*
-        // ✅ updatedList 처리
-        if (updatedList == null || updatedList.isEmpty()) {
-            log.info("업데이트할 항목이 없습니다.");
-        } else {
-            for (Work w : updatedList) {
-                if (w.getParent() == null) {
-                    w.setParent(new Work());
+        List<Work> updatedList = Work.getUpdatedList();
+        List<Work> newList = Work.getNewList();
+
+        if (Work.getWorkPk() != null) {
+
+            Work request = workService.findOne(Work.getWorkPk())
+                    .orElseThrow(() -> new RuntimeException("부모 없음"));
+
+            // ✅ updatedList 처리
+            if (updatedList == null || updatedList.isEmpty()) {
+                log.info("업데이트할 항목이 없습니다.");
+            } else {
+                for (Work w : updatedList) {
+                    if (w.getParent() == null) {
+                        w.setParent(new Work());
+                    }
+                    w.setParent(request);
                 }
-                w.getParent().setWorkPk(key);
+            }
+
+            // ✅ newList 처리
+            if (newList == null || newList.isEmpty()) {
+                log.info("신규 업데이트할 항목이 없습니다.");
+            } else {
+                for (Work w : newList) {
+                    if (w.getParent() == null) {
+                        w.setParent(new Work());
+                    }
+                    w.setParent(request);
+                }
             }
         }
 
-        // ✅ newList 처리
-        if (newList == null || newList.isEmpty()) {
-            log.info("신규 업데이트할 항목이 없습니다.");
-        } else {
-            for (Work w : newList) {
-                if (w.getParent() == null) {
-                    w.setParent(new Work());
-                }
-                w.getParent().setWorkPk(key);
-            }
-        }
-        */
+
         log.info("updatedList >>>"+updatedList);
         log.info("newList >>>"+newList);
 

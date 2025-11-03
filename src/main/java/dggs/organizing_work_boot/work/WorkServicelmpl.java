@@ -135,7 +135,7 @@ public class WorkServicelmpl implements WorkService {
     //삭제
     @Override
     public void deleteById(Work sampleTable) {
-        log.info("BusinessServicelmpl deleteById.."+ sampleTable.toString() );
+        log.info("{} deleteById.. {}", className, sampleTable.toString() );
         workRepository.deleteById(sampleTable.getWorkPk());
     }
 
@@ -155,7 +155,7 @@ public class WorkServicelmpl implements WorkService {
     @Override
     public List<Map<String, Object>> findTableInfo(String tableName, String schemaName) {
         log.info("BusinessServicelmpl findTableInfo..tableName : "+tableName+", schemaName : "+schemaName);
-
+        log.info("{} findTableInfo... tableName : {}, schemaName : {}", className, tableName, schemaName);
 
         // VO 값 / 기본값 처리
         Work work = new Work();
@@ -178,8 +178,10 @@ public class WorkServicelmpl implements WorkService {
             String type = "text";
             if (dataType.contains("date") || columnName.toLowerCase().contains("date")) {
                 type = "date";
-            } else if (columnName.toLowerCase().contains("status") || columnName.toLowerCase().contains("situation")) {
-                type = "sel";
+            } else if (columnName.toLowerCase().contains("status")) {
+                type = "select";
+            } else if (columnName.toLowerCase().contains("situation")) {
+                type = "selInput";
             }
 
             Map<String, Object> field = new HashMap<>();
@@ -191,6 +193,50 @@ public class WorkServicelmpl implements WorkService {
         }
 
         return fields;
+    }
+
+    //하위목록으로 이관
+    public void moveChildren(Long parentId, List<Work> subList) {
+        // 부모 Work 조회
+        Work parentWork = workRepository.findById(parentId)
+                .orElseThrow(() -> new RuntimeException("부모 work를 찾을 수 없습니다: " + parentId));
+
+        // subList 각각 업데이트
+        for (Work sub : subList) {
+            Work child = workRepository.findById(sub.getWorkPk())
+                    .orElseThrow(() -> new RuntimeException("하위 work를 찾을 수 없습니다: " + sub.getWorkPk()));
+            child.setParent(parentWork); // ✅ 부모 설정
+            workRepository.save(child);
+        }
+    }
+
+    //상위목록으로 이관
+    public String moveParent(Long parentId, List<Work> subList) {
+        // 현재 부모
+        Work parentWork = workRepository.findById(parentId)
+                .orElseThrow(() -> new RuntimeException("부모 work를 찾을 수 없습니다: " + parentId));
+
+        //현재부모의 부모
+        Work overParent = new Work();
+        if (parentWork.getParent() != null) {
+            overParent = workRepository.findById(parentWork.getParent().getWorkPk())
+                    .orElseThrow(() -> new RuntimeException("Parent not found"));
+            //work.setParent(parent); // parent는 findById로 불러온 영속 상태의 엔티티여야 함 (jpa 설정때문에 필요함)
+        }else{
+            //최상위 이동
+            log.info("{} moveParent.. not parent key ",className);
+            overParent = null;
+            //return "상위 목록이 없습니다";
+        }
+
+        // subList 각각 업데이트
+        for (Work sub : subList) {
+            Work child = workRepository.findById(sub.getWorkPk())
+                    .orElseThrow(() -> new RuntimeException("하위 work를 찾을 수 없습니다: " + sub.getWorkPk()));
+            child.setParent(overParent); // ✅ 부모 설정
+            workRepository.save(child);
+        }
+        return "이관되었습니다";
     }
 
 }

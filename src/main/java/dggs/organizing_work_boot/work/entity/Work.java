@@ -1,22 +1,30 @@
 package dggs.organizing_work_boot.work.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Comment;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@ToString(exclude = {"parent", "children"}) // 🔹 순환참조 방지
 @Entity
 @Getter
 @Setter
 @Table(name = "work")
+/*
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "workPk"
+)
+*/
 public class Work {
+
+    //네이밍 클래스_이름_타입(화면 표현용)
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,13 +41,13 @@ public class Work {
     @Comment("2_요청일")  // ✅ DB 컬럼 주석으로 들어감
     private LocalDate workRequestDate;
 
-    @Column(name = "work_requester")
+    @Column(name = "work_requester_situation")
     @Comment("3_요청자")  // ✅ DB 컬럼 주석으로 들어감
-    private String workRequester; // 요청자
+    private String workRequesterSituation; // 요청자
 
-    @Column(name = "work_performer")
+    @Column(name = "work_performer_situation")
     @Comment("4_수행자")  // ✅ DB 컬럼 주석으로 들어감
-    private String workPerformer; // 수행자
+    private String workPerformerSituation; // 수행자
 
     @Column(name = "work_completion_date")
     @Comment("5_완료일")  // ✅ DB 컬럼 주석으로 들어감
@@ -49,17 +57,17 @@ public class Work {
     @Comment("6_내용")  // ✅ DB 컬럼 주석으로 들어감
     private String workContents; // 내용
 
-    @Column(name = "work_situation")
+    @Column(name = "work_situation_status")
     @Comment("7_진행 상태")  // ✅ DB 컬럼 주석으로 들어감
-    private String workSituation; // 진행 상태[예정, 진행중, 완료]
+    private String workSituationStatus; // 진행 상태[예정, 진행중, 완료]
 
-    @Column(name = "work_type")
+    @Column(name = "work_type_status")
     @Comment("8_업무구분")  // ✅ DB 컬럼 주석으로 들어감
-    private String workType; //업무구분[내업, (기본)외업]
+    private String workTypeStatus; //업무구분[내업, (기본)외업]
 
-    @Column(name = "work_assortment")
+    @Column(name = "work_assortment_status")
     @Comment("9_업무종류")  // ✅ DB 컬럼 주석으로 들어감
-    private String workAssortment; //업무종류[개발, 문서, 데이터, 업데이트]
+    private String workAssortmentStatus; //업무종류[개발, 문서, 데이터, 업데이트]
 
     @Column(name = "work_etc")
     @Comment("10_비고")  // ✅ DB 컬럼 주석으로 들어감
@@ -89,14 +97,14 @@ public class Work {
     /** 자기참조 관계 설정 */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "work_parent_id")
-    @JsonBackReference //순환참조 문제는 해결
+    @JsonBackReference //순환참조 직렬화 제외
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "children"})
     @Comment("_부모일련번호")
     private Work parent;
 
     /** 하위 업무 리스트 */
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference //순환참조 문제는 해결
+    @JsonManagedReference //순환참조 직렬화 포함
     private List<Work> children = new ArrayList<>();
 
 
@@ -110,6 +118,10 @@ public class Work {
     private List<Work> updatedList;
     @Transient
     private List<Work> newList;
+
+    //하위목록으로 이관
+    @Transient
+    private List<Work> subList;
 
     @Transient
     private String tableName = "work";   //기본 테이블명

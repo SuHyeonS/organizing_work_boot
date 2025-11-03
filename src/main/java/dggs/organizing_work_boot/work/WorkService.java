@@ -24,4 +24,8 @@ public interface WorkService {
     List<Map<String, Object>> findTableInfo(String tableName, String schemaName);
 
     Optional<Work> findByIdWithParent(Long pk);
+
+    void moveChildren(Long parentId, List<Work> subList);
+    String moveParent(Long parentId, List<Work> subList);
+
 }
