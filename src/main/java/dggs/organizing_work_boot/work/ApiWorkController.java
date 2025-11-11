@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +25,7 @@ import java.util.Optional;
 @Slf4j
 @RestController //@Controller + @ResponseBody
 @RequestMapping("/api/work")
-public class AipWorkController {
+public class ApiWorkController {
 
     //행위	HTTP 메서드	URL 예시	의미
     //조회	GET	/api/work/1	id가 1인 Work 조회
@@ -48,6 +46,7 @@ public class AipWorkController {
 
         List<Map<String, Object>> findTableInfo;
         findTableInfo = workService.findTableInfo(tableName,schemaName);
+        log.info("getTableInfo={}",findTableInfo.toString());
         return findTableInfo;
     }
 
@@ -58,6 +57,9 @@ public class AipWorkController {
         log.info(className+" getParentDetail..");
         //List<Work> list = workService.findTableList(); //전체
         List<Work> list = workService.findByParentIsNull(); //부모만
+
+        log.info("getParentDetail={}",list.toString());
+
         return list;
     }
 
@@ -67,6 +69,7 @@ public class AipWorkController {
     public List<Work> getSubList (@PathVariable Long id){//(Model model, @ModelAttribute Work key){
         log.info(className+" getSubList..parentId = {}", id);
         List<Work> list = workService.findByParent_WorkPk(id);
+        log.info("getSubList={}",list.toString());
         return list;
     }
 
@@ -78,7 +81,7 @@ public class AipWorkController {
 
         Work work = workService.findOne(id)
                 .orElseThrow(() -> new RuntimeException("해당 Work를 찾을 수 없습니다."));
-
+        log.info("getOne={}",work.toString());
         return ResponseEntity.ok(work);
     }
 
@@ -124,7 +127,7 @@ public class AipWorkController {
         // Lazy 강제 초기화
         parent.getWorkPk();  // 부모 PK 접근 → Hibernate 초기화
         parent.setChildren(null); // 자식은 제외하고 보내기
-
+        log.info("getParentId={}",parent.toString());
         return ResponseEntity.ok(parent);
     }
 

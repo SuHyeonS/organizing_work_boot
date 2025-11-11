@@ -1,10 +1,13 @@
 package dggs.organizing_work_boot.business.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import dggs.organizing_work_boot.work.entity.Work;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Comment;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -36,5 +39,10 @@ public class Business {
     @OneToMany(mappedBy = "businessFk", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference //무한루프 방지
     private List<BusinessManagement> businessManagementList;
+
+    //work
+    @OneToMany(mappedBy = "businessFk") //맵핑할 필드값
+    @Comment("_업무키")  // ✅ DB 컬럼 주석으로 들어감
+    private List<Work> workFk = new ArrayList<>();
 
 }

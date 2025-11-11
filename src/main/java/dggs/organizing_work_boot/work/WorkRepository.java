@@ -68,4 +68,12 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
     @Query("SELECT w FROM Work w LEFT JOIN FETCH w.parent WHERE w.workPk = :pk")
     Optional<Work> findByIdWithParent(@Param("pk") Long pk);
 
+    //옵션2 가져오기
+    //요청자
+    @Query("SELECT w.workRequesterSituation FROM Work w GROUP BY w.workRequesterSituation")
+    List<String> findDistinctRequesterSituations();
+    //수행자
+    @Query("SELECT w.workPerformerSituation FROM Work w GROUP BY w.workPerformerSituation")
+    List<String> findDistinctPerformerSituations();
+
 }

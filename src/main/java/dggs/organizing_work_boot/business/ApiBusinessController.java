@@ -25,7 +25,7 @@ import java.util.Optional;
 @Slf4j
 @RestController //@Controller + @ResponseBody
 @RequestMapping("/api/business")
-public class AipBusinessController {
+public class ApiBusinessController {
 
     String className = "business";
     @Autowired

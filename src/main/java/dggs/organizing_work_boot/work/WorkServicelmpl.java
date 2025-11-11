@@ -1,8 +1,10 @@
 package dggs.organizing_work_boot.work;
 
+import dggs.organizing_work_boot.util.PropertyUtil;
 import dggs.organizing_work_boot.work.entity.Work;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.cfg.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -188,6 +190,25 @@ public class WorkServicelmpl implements WorkService {
             field.put("key", toCamelCase(columnName)); // ← 여기서 DB 컬럼명을 camelCase로 변환
             field.put("label", comment != null ? comment : columnName);
             field.put("type", type);
+
+            //옵션 넣기 > 프로퍼티에서 목록가져옴
+            String optionValues = PropertyUtil.getProperty("work.options."+toCamelCase(columnName));
+            //log.info("work.options."+toCamelCase(columnName)+"={}",optionValues);
+            if(optionValues != null && !optionValues.isEmpty()){
+                field.put("options", Arrays.asList(optionValues.split(",")));
+            }
+
+            //옵션2 데이터 리스트 DB에서 group by 함
+            //요청자
+            if(toCamelCase(columnName).equals("workRequesterSituation")){
+                List<String> data = workRepository.findDistinctRequesterSituations();
+                field.put("options", data);
+            }
+            //수행자
+            if(toCamelCase(columnName).equals("workPerformerSituation")){
+                List<String> data = workRepository.findDistinctPerformerSituations();
+                field.put("options", data);
+            }
 
             fields.add(field);
         }

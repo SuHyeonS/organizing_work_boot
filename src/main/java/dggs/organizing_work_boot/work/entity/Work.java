@@ -1,6 +1,8 @@
 package dggs.organizing_work_boot.work.entity;
 
 import com.fasterxml.jackson.annotation.*;
+import dggs.organizing_work_boot.business.entity.Business;
+import dggs.organizing_work_boot.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,7 +61,7 @@ public class Work {
 
     @Column(name = "work_situation_status")
     @Comment("7_진행 상태")  // ✅ DB 컬럼 주석으로 들어감
-    private String workSituationStatus; // 진행 상태[예정, 진행중, 완료]
+    private String workSituationStatus; // 진행 상태[예정, 진행중, 완료, 보류]
 
     @Column(name = "work_type_status")
     @Comment("8_업무구분")  // ✅ DB 컬럼 주석으로 들어감
@@ -91,6 +93,18 @@ public class Work {
     @Column(name = "work_progress_end_date")
     @Comment("14_진행일 종료")  // ✅ DB 컬럼 주석으로 들어감
     private LocalDate workProgressEndDate; //진행일 종료
+
+
+    //양방향 참조만 필드명
+    //business
+    @ManyToOne @JoinColumn(name = "business_fk", foreignKey = @ForeignKey(name = "work_business_fk"))
+    @Comment("_사업키")
+    private Business businessFk;
+
+    //user
+    @ManyToOne @JoinColumn(name = "users_fk", foreignKey = @ForeignKey(name = "work_users_fk"))
+    @Comment("_유저키")
+    private Users usersFk;
 
 
 
